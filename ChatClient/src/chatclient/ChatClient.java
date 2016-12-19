@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 public class ChatClient {
     public static void main (String [] args) {
         try {
-            int portNum = 55555;
+            int portNum = 7777;
 
             String registryPath = "rmi://localhost:" + portNum;
             String objectLabel = "/chatroomService";
@@ -35,11 +35,11 @@ public class ChatClient {
             chatRoomService.registerForCallback(thisClient);
 
             Message m = new Message("I'll be back", "Ahnawld");
-            boolean added = chatRoomService.addQuote(m);
+            boolean added = chatRoomService.addMessage(m);
 
             System.out.println("Message added? " + added);
 
-            Message newMessage = chatRoomService.getQuote();
+            Message newMessage = chatRoomService.getMessage();
             System.out.println(newMessage);
 
             User u = new User("Craig David", "password");
