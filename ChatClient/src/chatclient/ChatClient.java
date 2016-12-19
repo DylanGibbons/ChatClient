@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 public class ChatClient {
     public static void main (String [] args) {
         try {
-            int portNum = 55555;
+            int portNum = 7777;
 
             String registryPath = "rmi://localhost:" + portNum;
             String objectLabel = "/chatroomService";
