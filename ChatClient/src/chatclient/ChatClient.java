@@ -92,6 +92,7 @@ public class ChatClient extends javax.swing.JFrame {
         usernameLabel = new javax.swing.JLabel();
         usernameTxt = new javax.swing.JLabel();
         logOutButton = new javax.swing.JButton();
+        statusLbl = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -113,6 +114,13 @@ public class ChatClient extends javax.swing.JFrame {
         usernameLabel.setText("Username:");
 
         logOutButton.setText("Log Out");
+        logOutButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                logOutButtonActionPerformed(evt);
+            }
+        });
+
+        statusLbl.setForeground(new java.awt.Color(255, 0, 0));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -121,18 +129,21 @@ public class ChatClient extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 225, Short.MAX_VALUE)
-                        .addComponent(messageTxtBox))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(usernameLabel)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 225, Short.MAX_VALUE)
+                                .addComponent(messageTxtBox))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(usernameLabel)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(usernameTxt)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(usernameTxt)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addComponent(logOutButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 150, Short.MAX_VALUE)
-                    .addComponent(sendButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                            .addComponent(logOutButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 150, Short.MAX_VALUE)
+                            .addComponent(sendButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(statusLbl))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -151,7 +162,8 @@ public class ChatClient extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(messageTxtBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(sendButton))
-                .addContainerGap(22, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 22, Short.MAX_VALUE)
+                .addComponent(statusLbl))
         );
 
         pack();
@@ -159,13 +171,21 @@ public class ChatClient extends javax.swing.JFrame {
 
     private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
         String message = messageTxtBox.getText();
-        Message newMessage = new Message(message, loggedInUser.getUsername());
-        try {
-            chatRoomService.addMessage(newMessage);
-        } catch (RemoteException ex) {
-            Logger.getLogger(chatclient.ChatClient.class.getName()).log(Level.SEVERE, null, ex);
+        if (message != null) {
+            Message newMessage = new Message(message, loggedInUser.getUsername());
+            try {
+                chatRoomService.addMessage(newMessage);
+            } catch (RemoteException ex) {
+                Logger.getLogger(chatclient.ChatClient.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else {
+            statusLbl.setText("You must enter a message to send!");
         }
     }//GEN-LAST:event_sendButtonActionPerformed
+
+    private void logOutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logOutButtonActionPerformed
+        
+    }//GEN-LAST:event_logOutButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -204,8 +224,6 @@ public class ChatClient extends javax.swing.JFrame {
     
     /* Log in interface to allow user to log in and assign value to loggedInUser variable from database */
     class LogInDialog extends JDialog {
-        private final JFrame parent = (JFrame) this.getParent();
-        
         private final JLabel usernameLbl = new JLabel("Username");
         private final JLabel passwordLbl = new JLabel("Password");
 
@@ -270,10 +288,10 @@ public class ChatClient extends javax.swing.JFrame {
                             User u = new User(username, password);
 
                             if (chatRoomService.login(u)) {
-                                parent.setVisible(true);
-                                dispose();
                                 loggedInUser = u;
                                 usernameTxt.setText(loggedInUser.getUsername());
+                                parent.setVisible(true);
+                                dispose();
                             } else {
                                 statusLbl.setText("Invalid username or password");
                             }
@@ -310,6 +328,7 @@ public class ChatClient extends javax.swing.JFrame {
         
         private final JLabel statusLbl = new JLabel(" ");
         
+        private String username;
         private String password;
         private String confirmPassword;
         
@@ -369,18 +388,19 @@ public class ChatClient extends javax.swing.JFrame {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (chatRoomService != null) {
+                        username = usernameTxtBox.getText();
                         password = String.valueOf(passwordTxtBox.getPassword());
                         confirmPassword = String.valueOf(confirmPasswordTxtBox.getPassword());
-                        if (CheckPassword(password, confirmPassword)) {
+                        if (CheckEntryDetails(username, password, confirmPassword)) {
                             String username = usernameTxtBox.getText();
                             User newUser = new User(username, password);
                             try {
                                 chatRoomService.register(newUser);
+                                dispose();
+                                parent.setVisible(true);
                             } catch (RemoteException ex) {
                                 Logger.getLogger(chatclient.ChatClient.class.getName()).log(Level.SEVERE, null, ex);
                             }
-                            dispose();
-                            parent.setVisible(true);
                         }
                     } else {
                         JOptionPane.showMessageDialog(null, "Failed to establish a connection to the server");
@@ -389,17 +409,23 @@ public class ChatClient extends javax.swing.JFrame {
             });
         }
         
-        public boolean CheckPassword(String password, String confirmPassword) {
-            if (!password.equals(confirmPassword)) {
-                if (password.length() >= 6) {
-                    return true;
+        public boolean CheckEntryDetails(String username, String password, String confirmPassword) {
+            if (username != null || username.length() > 0) {
+                if (password.equals(confirmPassword)) {
+                    if (password.length() >= 6) {
+                        return true;
+                    } else {
+                        statusLbl.setText("Password must be more than 6 characters long");
+                        return false;
+                    }
                 } else {
-                    statusLbl.setText("Password must be more than 6 characters long");
+                    statusLbl.setText("Passwords do not match");
                 }
+                return false;
             } else {
-                statusLbl.setText("Passwords do not match");
+                statusLbl.setText("Username cannot be blank");
+                return false;
             }
-            return false;
         }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -410,6 +436,7 @@ public class ChatClient extends javax.swing.JFrame {
     private javax.swing.JTextField messageTxtBox;
     private javax.swing.JTextArea messagesTxtArea;
     private javax.swing.JButton sendButton;
+    private javax.swing.JLabel statusLbl;
     private javax.swing.JLabel usernameLabel;
     private javax.swing.JLabel usernameTxt;
     // End of variables declaration//GEN-END:variables
