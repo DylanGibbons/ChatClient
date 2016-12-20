@@ -37,6 +37,7 @@ import javax.swing.SwingConstants;
  */
 public class ChatClient extends javax.swing.JFrame {
     private LogInDialog logInDialog;
+    private RegisterDialog registerDialog;
     private ChatRoomInterface chatRoomService = null;
     private User loggedInUser;
     
@@ -44,6 +45,7 @@ public class ChatClient extends javax.swing.JFrame {
      * Creates new form ChatClient
      */
     public ChatClient() {
+        this.setVisible(false);
         getConnection();
         initComponents();
         logInDialog = new LogInDialog(this, true);
@@ -209,7 +211,7 @@ public class ChatClient extends javax.swing.JFrame {
         private final JPasswordField passwordTxtBox = new JPasswordField();
 
         private final JButton LogInButton = new JButton("Login");
-        private final JButton cancelButton = new JButton("Cancel");
+        private final JButton registerButton = new JButton("Register");
 
         private final JLabel statusLbl = new JLabel(" ");
 
@@ -234,7 +236,7 @@ public class ChatClient extends javax.swing.JFrame {
 
             JPanel p2 = new JPanel();
             p2.add(LogInButton);
-            p2.add(cancelButton);
+            p2.add(registerButton);
 
             JPanel p5 = new JPanel(new BorderLayout());
             p5.add(p2, BorderLayout.CENTER);
@@ -269,6 +271,7 @@ public class ChatClient extends javax.swing.JFrame {
                                 parent.setVisible(true);
                                 setVisible(false);
                                 loggedInUser = u;
+                                usernameTxt.setText(loggedInUser.getUsername());
                             } else {
                                 statusLbl.setText("Invalid username or password");
                             }
@@ -280,17 +283,65 @@ public class ChatClient extends javax.swing.JFrame {
                     }
                 }
             });
-            cancelButton.addActionListener(new ActionListener() {
+            registerButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     setVisible(false);
-                    parent.dispose();
-                    System.exit(0);
+                    registerDialog = new RegisterDialog();
+                    registerDialog.setVisible(true);
                 }
             });
         }
-}
-
+    }
+    
+    class RegisterDialog extends JDialog {
+        private final JLabel usernameLbl = new JLabel("Username");
+        private final JLabel passwordLbl = new JLabel("Password");
+        private final JLabel confirmPasswordLbl = new JLabel("Confirm Password");
+        
+        private final JTextField usernameTxtBox = new JTextField(15);
+        private final JPasswordField passwordTxtBox = new JPasswordField();
+        private final JPasswordField confirmPasswordTxtBox = new JPasswordField();
+        
+        private final JButton backButton = new JButton("Back");
+        private final JButton confirmButton = new JButton("Confirm");
+        
+        public RegisterDialog() {
+            this(null, true);
+        }
+        
+        public RegisterDialog(JFrame parent, boolean modal) {
+            super(parent, modal);
+            
+            JPanel p3 = new JPanel(new GridLayout(2, 1));
+            p3.add(usernameLbl);
+            p3.add(passwordLbl);
+            p3.add(confirmPasswordLbl);
+            
+            JPanel p4 = new JPanel(new GridLayout(2, 1));
+            p4.add(usernameTxtBox);
+            p4.add(passwordTxtBox);
+            p4.add(confirmPasswordTxtBox);
+            
+            JPanel p1 = new JPanel();
+            p1.add(p3);
+            p1.add(p4);
+            
+            JPanel p2 = new JPanel();
+            p2.add(backButton);
+            p2.add(confirmButton);
+            
+            JPanel p5 = new JPanel(new BorderLayout());
+            p5.add(p2, BorderLayout.CENTER);
+            
+            setLayout(new BorderLayout());
+            add(p1, BorderLayout.CENTER);
+            add(p5, BorderLayout.SOUTH);
+            pack();
+            setLocationRelativeTo(null);
+            setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        }
+    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextArea activeUsersTxtArea;
     private javax.swing.JScrollPane jScrollPane1;
