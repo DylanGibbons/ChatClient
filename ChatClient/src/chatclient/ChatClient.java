@@ -204,6 +204,8 @@ public class ChatClient extends javax.swing.JFrame {
     
     /* Log in interface to allow user to log in and assign value to loggedInUser variable from database */
     class LogInDialog extends JDialog {
+        private final JFrame parent = (JFrame) this.getParent();
+        
         private final JLabel usernameLbl = new JLabel("Username");
         private final JLabel passwordLbl = new JLabel("Password");
 
@@ -269,7 +271,7 @@ public class ChatClient extends javax.swing.JFrame {
 
                             if (chatRoomService.login(u)) {
                                 parent.setVisible(true);
-                                setVisible(false);
+                                dispose();
                                 loggedInUser = u;
                                 usernameTxt.setText(loggedInUser.getUsername());
                             } else {
@@ -287,7 +289,7 @@ public class ChatClient extends javax.swing.JFrame {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     setVisible(false);
-                    registerDialog = new RegisterDialog();
+                    registerDialog = new RegisterDialog(parent, true);
                     registerDialog.setVisible(true);
                 }
             });
@@ -306,6 +308,11 @@ public class ChatClient extends javax.swing.JFrame {
         private final JButton backButton = new JButton("Back");
         private final JButton confirmButton = new JButton("Confirm");
         
+        private final JLabel statusLbl = new JLabel(" ");
+        
+        private String password;
+        private String confirmPassword;
+        
         public RegisterDialog() {
             this(null, true);
         }
@@ -313,12 +320,12 @@ public class ChatClient extends javax.swing.JFrame {
         public RegisterDialog(JFrame parent, boolean modal) {
             super(parent, modal);
             
-            JPanel p3 = new JPanel(new GridLayout(2, 1));
+            JPanel p3 = new JPanel(new GridLayout(3, 1));
             p3.add(usernameLbl);
             p3.add(passwordLbl);
             p3.add(confirmPasswordLbl);
             
-            JPanel p4 = new JPanel(new GridLayout(2, 1));
+            JPanel p4 = new JPanel(new GridLayout(3, 1));
             p4.add(usernameTxtBox);
             p4.add(passwordTxtBox);
             p4.add(confirmPasswordTxtBox);
@@ -333,6 +340,9 @@ public class ChatClient extends javax.swing.JFrame {
             
             JPanel p5 = new JPanel(new BorderLayout());
             p5.add(p2, BorderLayout.CENTER);
+            p5.add(statusLbl, BorderLayout.NORTH);
+            statusLbl.setForeground(Color.RED);
+            statusLbl.setHorizontalAlignment(SwingConstants.CENTER);
             
             setLayout(new BorderLayout());
             add(p1, BorderLayout.CENTER);
@@ -340,6 +350,56 @@ public class ChatClient extends javax.swing.JFrame {
             pack();
             setLocationRelativeTo(null);
             setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+            
+            addWindowListener(new WindowAdapter() {  
+                @Override
+                public void windowClosing(WindowEvent e) {  
+                    System.exit(0);  
+                }  
+            });
+            
+            backButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    registerDialog.dispose();
+                    logInDialog.setVisible(true);
+                }
+            });
+            confirmButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (chatRoomService != null) {
+                        password = String.valueOf(passwordTxtBox.getPassword());
+                        confirmPassword = String.valueOf(confirmPasswordTxtBox.getPassword());
+                        if (CheckPassword(password, confirmPassword)) {
+                            String username = usernameTxtBox.getText();
+                            User newUser = new User(username, password);
+                            try {
+                                chatRoomService.register(newUser);
+                            } catch (RemoteException ex) {
+                                Logger.getLogger(chatclient.ChatClient.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                            dispose();
+                            parent.setVisible(true);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Failed to establish a connection to the server");
+                    }
+                }
+            });
+        }
+        
+        public boolean CheckPassword(String password, String confirmPassword) {
+            if (!password.equals(confirmPassword)) {
+                if (password.length() >= 6) {
+                    return true;
+                } else {
+                    statusLbl.setText("Password must be more than 6 characters long");
+                }
+            } else {
+                statusLbl.setText("Passwords do not match");
+            }
+            return false;
         }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
