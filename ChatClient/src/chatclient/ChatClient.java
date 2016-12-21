@@ -7,6 +7,8 @@ package chatclient;
 
 import business.Message;
 import business.User;
+import callback_support.ChatClientImpl;
+import callback_support.ChatRoomClientInterface;
 import chatroom_functionality.ChatRoomInterface;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -28,6 +30,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
@@ -36,10 +39,13 @@ import javax.swing.SwingConstants;
  * @author Dylan
  */
 public class ChatClient extends javax.swing.JFrame {
-    private LogInDialog logInDialog;
-    private RegisterDialog registerDialog;
-    private ChatRoomInterface chatRoomService = null;
-    private User loggedInUser;
+    private static ChatRoomClientInterface thisClient;
+    private static LogInDialog logInDialog;
+    private static RegisterDialog registerDialog;
+    private static ChatRoomInterface chatRoomService = null;
+    private static User loggedInUser;
+    private static Message chatMessage;
+    private static JTextArea messageBoard;
     
     /**
      * Creates new form ChatClient
@@ -48,12 +54,6 @@ public class ChatClient extends javax.swing.JFrame {
         this.setVisible(false);
         getConnection();
         initComponents();
-        logInDialog = new LogInDialog(this, true);
-        logInDialog.setVisible(true);
-    }
-    
-    /* Establishes a connection to the chatroom server */
-    public boolean getConnection() {
         try {
         int portNum = 7777;
 
@@ -61,17 +61,28 @@ public class ChatClient extends javax.swing.JFrame {
         String objectLabel = "/chatroomService";
 
         chatRoomService = (ChatRoomInterface) Naming.lookup(registryPath + objectLabel);
-        return true;
+        thisClient = new ChatClientImpl(messagesTxtArea, activeUsersTxtArea);
+        chatRoomService.registerForCallback(thisClient);
+        
         } catch (NotBoundException ex) {
             Logger.getLogger(chatclient.ChatClient.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
         } catch (MalformedURLException ex) {
             Logger.getLogger(chatclient.ChatClient.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
         } catch (RemoteException ex) {
             Logger.getLogger(chatclient.ChatClient.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
         }
+        logInDialog = new LogInDialog(this, true);
+        logInDialog.setVisible(true);
+        messagesTxtArea.setEditable(false);
+        activeUsersTxtArea.setEditable(false);
+        
+        
+    }
+    
+    /* Establishes a connection to the chatroom server */
+    public boolean getConnection() {
+        
+        return true;
     }
 
     /**
@@ -178,6 +189,7 @@ public class ChatClient extends javax.swing.JFrame {
             } catch (RemoteException ex) {
                 Logger.getLogger(chatclient.ChatClient.class.getName()).log(Level.SEVERE, null, ex);
             }
+
         } else {
             statusLbl.setText("You must enter a message to send!");
         }
@@ -214,6 +226,7 @@ public class ChatClient extends javax.swing.JFrame {
         }
         //</editor-fold>
 
+        
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -392,12 +405,13 @@ public class ChatClient extends javax.swing.JFrame {
                         password = String.valueOf(passwordTxtBox.getPassword());
                         confirmPassword = String.valueOf(confirmPasswordTxtBox.getPassword());
                         if (CheckEntryDetails(username, password, confirmPassword)) {
-                            String username = usernameTxtBox.getText();
                             User newUser = new User(username, password);
                             try {
-                                chatRoomService.register(newUser);
-                                dispose();
-                                parent.setVisible(true);
+                                if (chatRoomService.register(newUser)) {
+                                    loggedInUser = newUser;
+                                    dispose();
+                                    parent.setVisible(true);
+                                }
                             } catch (RemoteException ex) {
                                 Logger.getLogger(chatclient.ChatClient.class.getName()).log(Level.SEVERE, null, ex);
                             }

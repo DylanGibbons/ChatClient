@@ -7,6 +7,8 @@ package callback_support;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 
 /**
  *
@@ -14,12 +16,28 @@ import java.rmi.server.UnicastRemoteObject;
  */
 public class ChatClientImpl extends UnicastRemoteObject implements ChatRoomClientInterface {
     
+    private final JTextArea messageBoard;
+    private final JTextArea loggedUsers;
+
+    
     public ChatClientImpl() throws RemoteException{
+        messageBoard = new JTextArea();
+        loggedUsers = new JTextArea();
+    }
+    
+    public ChatClientImpl(JTextArea messages, JTextArea userList) throws RemoteException{
+        messageBoard = messages;
+        loggedUsers = userList;
     }
     
     @Override
     public void newMessageNotification(String newMessage) throws RemoteException {
-        System.out.println(newMessage);
+        messageBoard.append(newMessage + "\n");
+    }
+    
+    @Override
+    public void newLoginNotification(String newMessage) throws RemoteException {
+        loggedUsers.append(newMessage);
     }
     
 }
