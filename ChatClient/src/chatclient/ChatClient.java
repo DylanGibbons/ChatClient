@@ -39,11 +39,11 @@ import javax.swing.SwingConstants;
  * @author Dylan
  */
 public class ChatClient extends javax.swing.JFrame {
-    private static ChatRoomClientInterface thisClient;
+    private static ChatRoomClientInterface thisClient = null;
     private static LogInDialog logInDialog;
     private static RegisterDialog registerDialog;
     private static ChatRoomInterface chatRoomService = null;
-    private static User loggedInUser;
+    private static User loggedInUser = null;
     private static Message chatMessage;
     private static JTextArea messageBoard;
     
@@ -186,6 +186,7 @@ public class ChatClient extends javax.swing.JFrame {
             Message newMessage = new Message(message, loggedInUser.getUsername());
             try {
                 chatRoomService.addMessage(newMessage);
+                messageTxtBox.setText("");
             } catch (RemoteException ex) {
                 Logger.getLogger(chatclient.ChatClient.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -196,7 +197,10 @@ public class ChatClient extends javax.swing.JFrame {
     }//GEN-LAST:event_sendButtonActionPerformed
 
     private void logOutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logOutButtonActionPerformed
-        
+        dispose();
+        loggedInUser = null;
+        chatRoomService = null;
+        new ChatClient();
     }//GEN-LAST:event_logOutButtonActionPerformed
 
     /**
