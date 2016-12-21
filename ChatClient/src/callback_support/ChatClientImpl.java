@@ -7,6 +7,7 @@ package callback_support;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import javax.swing.DefaultListModel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
@@ -17,17 +18,17 @@ import javax.swing.JTextField;
 public class ChatClientImpl extends UnicastRemoteObject implements ChatRoomClientInterface {
     
     private final JTextArea messageBoard;
-    private final JTextArea loggedUsers;
+    private final DefaultListModel loggedUsersMod;
 
     
     public ChatClientImpl() throws RemoteException{
         messageBoard = new JTextArea();
-        loggedUsers = new JTextArea();
+        loggedUsersMod = new DefaultListModel();
     }
     
-    public ChatClientImpl(JTextArea messages, JTextArea userList) throws RemoteException{
+    public ChatClientImpl(JTextArea messages, DefaultListModel userList) throws RemoteException{
         messageBoard = messages;
-        loggedUsers = userList;
+        loggedUsersMod = userList;
     }
     
     @Override
@@ -37,7 +38,7 @@ public class ChatClientImpl extends UnicastRemoteObject implements ChatRoomClien
     
     @Override
     public void newLoginNotification(String newMessage) throws RemoteException {
-        loggedUsers.append(newMessage);
+        
     }
     
 }
