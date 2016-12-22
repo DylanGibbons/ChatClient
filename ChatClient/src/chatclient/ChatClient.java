@@ -338,25 +338,22 @@ public class ChatClient extends javax.swing.JFrame {
     }//GEN-LAST:event_logOutButtonActionPerformed
 
     private void privateChatBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_privateChatBtnActionPerformed
-        if (privateRecipientTxtBox.getText().equals("")) {
-            privateRecipient = activeUsersList.getSelectedValue().toString();
+        if (!privateTxtBox.getText().equals("")) {
+        
+            if (!privateRecipientTxtBox.getText().equals("") || privateRecipientTxtBox != null) {
+                privateRecipient = activeUsersList.getSelectedValue().toString();
+            } else {
+                privateRecipient = privateRecipientTxtBox.getText();
+            }
+
+            PrivateMessage pm = new PrivateMessage(loggedInUser.getUsername(), privateTxtBox.getText(), privateRecipient);
+            try {
+                chatRoomService.addPrivateMessage(pm);
+            } catch (RemoteException ex) {
+                Logger.getLogger(ChatClient.class.getName()).log(Level.SEVERE, null, ex);
+            }
         } else {
-            privateRecipient = privateRecipientTxtBox.getText();
-        }
-        
-        if (privateRecipient.equals("") || privateRecipient == null) {
-            statusLbl.setText("You must enter a user to send to!");
-        }
-        
-        if (privateTxtBox.getText().equals("")) {
-            statusLbl.setText("You must enter a message to send!");
-        }
-        
-        PrivateMessage pm = new PrivateMessage(loggedInUser.getUsername(), privateTxtBox.getText(), privateRecipient);
-        try {
-            chatRoomService.addPrivateMessage(pm);
-        } catch (RemoteException ex) {
-            Logger.getLogger(ChatClient.class.getName()).log(Level.SEVERE, null, ex);
+            statusLbl.setText("You must enter a private message to send!");
         }
     }//GEN-LAST:event_privateChatBtnActionPerformed
 
