@@ -50,34 +50,32 @@ public class ChatClient extends javax.swing.JFrame {
     private static User loggedInUser = null;
     private static String privateRecipient = null;
     private static DefaultListModel activeUsersMod;
-    private static Message chatMessage;
-    private static JTextArea messageBoard;
-    
+    private static Message chatMessage;    
     /**
      * Creates new form ChatClient
      */
     public ChatClient() {
         this.setVisible(false);
         this.getContentPane().setBackground(Color.black);
-        getConnection();
         initComponents();
         activeUsersMod = new DefaultListModel();
+        
         try {
-        int portNum = 7777;
+            int portNum = 7777;
 
-        String registryPath = "rmi://localhost:" + portNum;
-        String objectLabel = "/chatroomService";
+            String registryPath = "rmi://localhost:" + portNum;
+            String objectLabel = "/chatroomService";
 
-        chatRoomService = (ChatRoomInterface) Naming.lookup(registryPath + objectLabel);
+            chatRoomService = (ChatRoomInterface) Naming.lookup(registryPath + objectLabel);
+
+            logInDialog = new LogInDialog(this, true);
+            logInDialog.setVisible(true);
+
+            thisClient = new ChatClientImpl(messagesTxtArea, activeUsersMod, privateTxtArea);
+            chatRoomService.registerForCallback(loggedInUser.getUsername(), thisClient);
+            ArrayList<String> loggedUserList = chatRoomService.getLoggedUsers(loggedInUser.getUsername());
+            loggedUserList.stream().forEach(u -> activeUsersMod.addElement(u));
         
-        logInDialog = new LogInDialog(this, true);
-        logInDialog.setVisible(true);
-        
-        thisClient = new ChatClientImpl(messagesTxtArea, activeUsersMod, privateTxtArea);
-        chatRoomService.registerForCallback(loggedInUser.getUsername(), thisClient);
-        ArrayList<String> loggedUserList = chatRoomService.getLoggedUsers(loggedInUser.getUsername());
-        
-        loggedUserList.stream().forEach(u -> activeUsersMod.addElement(u));
         } catch (NotBoundException ex) {
             Logger.getLogger(chatclient.ChatClient.class.getName()).log(Level.SEVERE, null, ex);
         } catch (MalformedURLException ex) {
@@ -85,8 +83,8 @@ public class ChatClient extends javax.swing.JFrame {
         } catch (RemoteException ex) {
             Logger.getLogger(chatclient.ChatClient.class.getName()).log(Level.SEVERE, null, ex);
         }
-        activeUsersList.setModel(activeUsersMod);
         
+        activeUsersList.setModel(activeUsersMod);
         messagesTxtArea.setEditable(false);
         
         this.addWindowListener(new java.awt.event.WindowAdapter() {
@@ -101,19 +99,10 @@ public class ChatClient extends javax.swing.JFrame {
                 } catch (RemoteException ex) {
                     Logger.getLogger(ChatClient.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                //loggedInUser = null;
-                //chatRoomService = null;
-                //thisClient = null;
             }
         });
     }
     
-    /* Establishes a connection to the chatroom server */
-    public boolean getConnection() {
-        
-        return true;
-    }
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -332,7 +321,6 @@ public class ChatClient extends javax.swing.JFrame {
 
     private void privateChatBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_privateChatBtnActionPerformed
         
-        System.out.println(privateRecipient);
         if(privateRecipient != null || !privateRecipient.isEmpty()) {
             PrivateMessage pm = new PrivateMessage(loggedInUser.getUsername(), privateTxtBox.getText(), privateRecipient);
             try {
@@ -467,7 +455,7 @@ public class ChatClient extends javax.swing.JFrame {
                             String username = usernameTxtBox.getText();
                             String password = String.valueOf(passwordTxtBox.getPassword());
                             User u = new User(username, password);
-                            System.out.println(u);
+
                             if (chatRoomService.login(u)) {
                                 loggedInUser = u;
                                 usernameTxt.setText(loggedInUser.getUsername());
