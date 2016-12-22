@@ -3,7 +3,7 @@ package business;
 import java.io.Serializable;
 import java.util.Objects;
 
-
+//client
 public class User implements Serializable
 {
  
@@ -44,21 +44,12 @@ public class User implements Serializable
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
+    public boolean equals(Object o) {
+        User u2 = (User) o;
+        if(username.equals(u2.username)) {
+            return true;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final User other = (User) obj;
-        if (!Objects.equals(this.username, other.username)) {
-            return false;
-        }
-        if (!Objects.equals(this.password, other.password)) {
-            return false;
-        }
-        return true;
+        return false;
     }
 
     @Override
