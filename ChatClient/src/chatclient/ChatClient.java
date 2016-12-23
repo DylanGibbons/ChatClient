@@ -53,29 +53,40 @@ public class ChatClient extends javax.swing.JFrame {
     private static JTextArea messageBoard;
     
     /**
-     * Creates new form ChatClient
+     * 
+     * Constructor for overall chat client gui
+     * chatRoomService is initialized, granting the ability to call methods from the server in the client
+     * JDialog is created for log in, must be completed before the actual JFrame can be accessed
+     * 
      */
     public ChatClient() {
         this.setVisible(false);
         this.getContentPane().setBackground(Color.black);
         initComponents();
         activeUsersMod = new DefaultListModel();
+        
+        /**
+        * 
+        * Tries to establish a connection to the server, on failure a message is displayed through the log in JDialog
+        * JDialog is created to make the user log in
+        *
+        */
         try {
-        int portNum = 7777;
+            int portNum = 7777;
 
-        String registryPath = "rmi://localhost:" + portNum;
-        String objectLabel = "/chatroomService";
+            String registryPath = "rmi://localhost:" + portNum;
+            String objectLabel = "/chatroomService";
 
-        chatRoomService = (ChatRoomInterface) Naming.lookup(registryPath + objectLabel);
-        
-        logInDialog = new LogInDialog(this, true);
-        logInDialog.setVisible(true);
-        
-        thisClient = new ChatClientImpl(messagesTxtArea, activeUsersMod, privateTxtArea);
-        chatRoomService.registerForCallback(loggedInUser.getUsername(), thisClient);
-        ArrayList<String> loggedUserList = chatRoomService.getLoggedUsers(loggedInUser.getUsername());
-        
-        loggedUserList.stream().forEach(u -> activeUsersMod.addElement(u));
+            chatRoomService = (ChatRoomInterface) Naming.lookup(registryPath + objectLabel);
+
+            logInDialog = new LogInDialog(this, true);
+            logInDialog.setVisible(true);
+
+            thisClient = new ChatClientImpl(messagesTxtArea, activeUsersMod, privateTxtArea);
+            chatRoomService.registerForCallback(loggedInUser.getUsername(), thisClient);
+            ArrayList<String> loggedUserList = chatRoomService.getLoggedUsers(loggedInUser.getUsername());
+
+            loggedUserList.stream().forEach(u -> activeUsersMod.addElement(u));
         } catch (NotBoundException ex) {
             Logger.getLogger(chatclient.ChatClient.class.getName()).log(Level.SEVERE, null, ex);
         } catch (MalformedURLException ex) {
@@ -90,6 +101,11 @@ public class ChatClient extends javax.swing.JFrame {
         privateTxtArea.setEditable(false);
         privateTxtArchive.setEditable(false);
         
+        /**
+        *
+        * Listener to handle the event of a window closing
+        * Reverts all relevant variables back to null and disconnects from the server
+        */
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent windowEvent) {
@@ -306,6 +322,14 @@ public class ChatClient extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /**
+    *
+    * Button to send a message to the general message area for every active user to see 
+    * Gets the text from the message text box and checks if it's null
+    * If so then an error message is displayed to the user
+    * If not then the message is sent to the server to be added to the general messages text area
+    *
+    */
     private void sendButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sendButtonActionPerformed
         String message = messageTxtBox.getText();
         if (message != null) {
@@ -322,6 +346,15 @@ public class ChatClient extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_sendButtonActionPerformed
 
+    /**
+    *
+    * Button to log out of the gui
+    * Disposes of the interface
+    * Disconnects from the server using appropriate methods
+    * Reverts all relevant variables back to null
+    *
+    */
+    
     private void logOutButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logOutButtonActionPerformed
         dispose();
         try {
@@ -337,8 +370,20 @@ public class ChatClient extends javax.swing.JFrame {
         new ChatClient();
     }//GEN-LAST:event_logOutButtonActionPerformed
 
+    /**
+    *
+    * Button to send a private message to a specific user
+    * Checks that text from the private text box contains a message
+    * If not then an error message is shown to the user
+    * If so then checks that the recipient text box is not empty, will use recipient text box over the list of users
+    * If nothing is entered into the recipient text box then a message can be sent to the currently selected user
+    * A private message is created using the user logged into the client, the message entered into the private text box and the recipient
+    * The private message is added to the private message text area
+    *
+    */
+    
     private void privateChatBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_privateChatBtnActionPerformed
-        if (!privateTxtBox.getText().equals("")) {
+        if (!privateTxtBox.getText().equals("") || privateTxtBox != null) {
         
             if (!privateRecipientTxtBox.getText().equals("") || privateRecipientTxtBox != null) {
                 privateRecipient = activeUsersList.getSelectedValue().toString();
@@ -396,7 +441,12 @@ public class ChatClient extends javax.swing.JFrame {
         });
     }
    
-    /* Log in interface to allow user to log in and assign value to loggedInUser variable from database */
+    /**
+    *
+    * Log in Dialog to allow the user to log into the chat service
+    * If log in is successful the JFrame is made visible and the users details are loaded in
+    *
+    */
     class LogInDialog extends JDialog {
         private final JLabel usernameLbl = new JLabel("Username");
         private final JLabel passwordLbl = new JLabel("Password");
@@ -453,20 +503,25 @@ public class ChatClient extends javax.swing.JFrame {
                     System.exit(0);  
                 }  
             });
-
+            
+            /**
+            *
+            * Action listener fo the log in button
+            * If chatRoomService has not successfully been initialized, an error message is displayed to the user
+            * A user object is created out of the users input to the gui and compared to the database
+            * If that user is stored on the database, it is logged into the service and the log in dialog is disposed
+            * If not, an error message is displayed to the user
+            *
+            */
             LogInButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (chatRoomService != null) {
                         try {
-                            System.out.println("1");
                             String username = usernameTxtBox.getText();
                             String password = String.valueOf(passwordTxtBox.getPassword());
                             User u = new User(username, password);
-                            System.out.println(u.toString());
-                            System.out.println("2");
                             if (chatRoomService.login(u)) {
-                                System.out.println("chatroomservice login u");
                                 loggedInUser = u;
                                 usernameTxt.setText(loggedInUser.getUsername());
                                 parent.setVisible(true);
@@ -482,6 +537,11 @@ public class ChatClient extends javax.swing.JFrame {
                     }
                 }
             });
+            /**
+            *
+            * Button listener that creates a registration JDialog if the button clicked
+            *
+            */
             registerButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -493,6 +553,12 @@ public class ChatClient extends javax.swing.JFrame {
         }
     }
     
+    /**
+    *
+    * Register dialog to allow users to register to the chat service
+    * Upon successful registration the JFrame is made visible and the users details are loaded in
+    *
+    */
     class RegisterDialog extends JDialog {
         private final JLabel usernameLbl = new JLabel("Username");
         private final JLabel passwordLbl = new JLabel("Password");
@@ -558,6 +624,11 @@ public class ChatClient extends javax.swing.JFrame {
                 }  
             });
             
+            /**
+            *
+            * Action listener for the back button, when pressed disposes the register dialog and makes log in dialog visible again
+            *
+            */
             backButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -565,6 +636,15 @@ public class ChatClient extends javax.swing.JFrame {
                     logInDialog.setVisible(true);
                 }
             });
+            
+            /**
+            *
+            * Action listener for the confirm button
+            * If chatRoomService has not successfully been initialized, an error message is displayed to the user
+            * If the entry details meet the criteria of CheckEntryDetails then a new user object is created
+            * If the user is successfully added to the database then they are logged into the service
+            *
+            */
             confirmButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -592,6 +672,12 @@ public class ChatClient extends javax.swing.JFrame {
             });
         }
         
+        /**
+        *
+        * Method that checks if the entry details in the register form conform to the standard required for registration
+        * Returns a boolean declaring if so or if not
+        *
+        */
         public boolean CheckEntryDetails(String username, String password, String confirmPassword) {
             if (username != null || username.length() > 0) {
                 if (password.equals(confirmPassword)) {
