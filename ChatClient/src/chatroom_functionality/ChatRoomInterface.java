@@ -13,6 +13,7 @@ public interface ChatRoomInterface extends Remote {
     //client
 
     public ArrayList<String> getLoggedUsers(String username) throws RemoteException;
+    public boolean isValidUser(String username) throws RemoteException;
     public ArrayList<PrivateMessage> getPrivateMessageHistory(String username, String friendName) throws RemoteException;
     
     public boolean addMessage(Message m) throws RemoteException;
